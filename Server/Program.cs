@@ -6,10 +6,7 @@ using System.Text.Json;
 List<Car> cars = null!;
 
 if (File.Exists(@"..\..\..\Cars.json"))
-{
     cars = JsonSerializer.Deserialize<List<Car>>(File.ReadAllText("Cars.json"))!;
-    Console.WriteLine("Cars yest");
-}
 
 cars ??= new();
 
@@ -20,6 +17,7 @@ listener.Start(10);
 while (true)
 {
     var client = await listener.AcceptTcpClientAsync();
+    var sync = new object();
 
     Console.WriteLine($"Client {client.Client.RemoteEndPoint} accepted");
 
@@ -65,9 +63,64 @@ while (true)
                         break;
                     }
                 case HttpMethods.POST:
-                    break;
+                    {
+                        var id = command.Car?.Id;
+                        var canBePosted = true;
+                        foreach (var c in cars)
+                        {
+                            if (c.Id == id)
+                            {
+                                canBePosted = false;
+                                break;
+                            }
+                        }
+
+                        if (canBePosted)
+                        {
+                            if (command.Car is not null)
+                                lock (sync)
+                                {
+                                    cars.Add(command.Car);
+                                }
+                        }
+
+                        bw.Write(canBePosted);
+
+                        break;
+                    }
                 case HttpMethods.PUT:
-                    break;
+                    {
+                        var id = command.Car?.Id;
+                        var insertIndex = -1;
+                        var canBePuted = false;
+                        foreach (var c in cars)
+                        {
+                            if (c.Id == id)
+                            {
+                                canBePuted = true;
+                                lock (sync)
+                                {
+                                    insertIndex = cars.IndexOf(c);
+                                }
+                                cars.Remove(c);
+                                break;
+                            }
+                        }
+
+                        if (canBePuted)
+                        {
+                            if (command.Car is not null)
+                                lock (sync)
+                                {
+                                    cars.Insert(insertIndex, command.Car);
+                                }
+                        }
+
+                        bw.Write(canBePuted);
+
+                        break;
+                    }
+
                 case HttpMethods.DELETE:
                     {
                         var isDeleted = false;
@@ -76,7 +129,10 @@ while (true)
                         {
                             if (c.Id == id)
                             {
-                                cars.Remove(c);
+                                lock (sync)
+                                {
+                                    cars.Remove(c);
+                                }
                                 isDeleted = true;
                                 break;
                             }
@@ -84,8 +140,6 @@ while (true)
                         bw.Write(isDeleted);
                         break;
                     }
-                default:
-                    break;
             }
         }
     }).Start();

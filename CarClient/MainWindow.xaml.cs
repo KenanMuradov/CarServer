@@ -61,7 +61,7 @@ public partial class MainWindow : Window
         request = new Command();
         Car = new();
         Cars = new();
-        client = new TcpClient("127.0.0.1",45678);
+        client = new TcpClient("127.0.0.1", 45678);
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e) =>
@@ -125,7 +125,7 @@ public partial class MainWindow : Window
 
                         await Task.Delay(50);
 
-                        if(Car.Id==0)
+                        if (Car.Id == 0)
                         {
                             var jsonCars = br.ReadString();
                             var cars = JsonSerializer.Deserialize<List<Car>>(jsonCars);
@@ -149,12 +149,100 @@ public partial class MainWindow : Window
                             MessageBox.Show("Car with such id not found");
                             Cars.Clear();
                         }
+
+                        break;
                     }
-                    break;
                 case HttpMethods.POST:
-                    break;
+                    {
+
+                        var sb = new StringBuilder();
+
+                        if (Car.Id <= 0)
+                            sb.Append("Entered id is invalid");
+                        if (Car.Year < 1960 || Car.Year > DateTime.Now.Year)
+                            sb.Append("Entered year is invalid");
+
+                        if (string.IsNullOrWhiteSpace(Car.Make)
+                            || string.IsNullOrWhiteSpace(Car.Model)
+                            || string.IsNullOrWhiteSpace(Car.VIN)
+                            || string.IsNullOrEmpty(Car.Color))
+                            sb.Append("Please enter all required information");
+
+                        if (sb.Length > 0)
+                        {
+                            MessageBox.Show(sb.ToString());
+                            return;
+                        }
+
+                        request.Car = Car;
+                        var jsonStr = JsonSerializer.Serialize(request);
+
+                        var stream = client.GetStream();
+                        var bw = new BinaryWriter(stream);
+                        var br = new BinaryReader(stream);
+
+                        bw.Write(jsonStr);
+
+                        await Task.Delay(50);
+
+                        var isPosted = br.ReadBoolean();
+                        var resultText = string.Empty;
+
+                        if (isPosted)
+                            resultText = "Added succesfully";
+                        else
+                            resultText = "Car with such id already Exists";
+
+                        MessageBox.Show(resultText);
+                        Cars.Clear();
+
+                        break;
+                    }
                 case HttpMethods.PUT:
-                    break;
+                    {
+                        var sb = new StringBuilder();
+
+                        if (Car.Id <= 0)
+                            sb.Append("Entered id is invalid");
+                        if (Car.Year < 1960 || Car.Year > DateTime.Now.Year)
+                            sb.Append("Entered year is invalid");
+
+                        if (string.IsNullOrWhiteSpace(Car.Make)
+                            || string.IsNullOrWhiteSpace(Car.Model)
+                            || string.IsNullOrWhiteSpace(Car.VIN)
+                            || string.IsNullOrEmpty(Car.Color))
+                            sb.Append("Please enter all required information");
+
+                        if (sb.Length > 0)
+                        {
+                            MessageBox.Show(sb.ToString());
+                            return;
+                        }
+
+                        request.Car = Car;
+                        var jsonStr = JsonSerializer.Serialize(request);
+
+                        var stream = client.GetStream();
+                        var bw = new BinaryWriter(stream);
+                        var br = new BinaryReader(stream);
+
+                        bw.Write(jsonStr);
+
+                        await Task.Delay(50);
+
+                        var isPosted = br.ReadBoolean();
+                        var resultText = string.Empty;
+
+                        if (isPosted)
+                            resultText = "Updated succesfully";
+                        else
+                            resultText = "Car with such id doesn't Exists";
+
+                        MessageBox.Show(resultText);
+                        Cars.Clear();
+
+                        break;
+                    }
                 case HttpMethods.DELETE:
                     {
                         if (Car.Id <= 0)
@@ -184,8 +272,8 @@ public partial class MainWindow : Window
 
                         MessageBox.Show(resultText);
                         Cars.Clear();
+                        break;
                     }
-                    break;
             }
         }
     }

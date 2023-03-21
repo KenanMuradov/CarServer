@@ -103,8 +103,8 @@
         </Grid>
 
 
-        <ListView x:Name="CarList" Grid.Row="1" ItemsSource="{Binding Cars}">
+        <DataGrid x:Name="CarList" Grid.Row="1" ItemsSource="{Binding Cars}" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"> 
 
-        </ListView>
+        </DataGrid>
     </Grid>
 </Window>
