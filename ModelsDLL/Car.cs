@@ -7,6 +7,6 @@ public class Car
     public string? Model { get; set; }
     public ushort Year { get; set; }
     public string? VIN { get; set; }
-    public string? Color { get;}
+    public string? Color { get; set; }
 
 }

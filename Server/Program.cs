@@ -3,10 +3,15 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
 
-List<Car> list = null!;
+List<Car> cars = null!;
 
-if (File.Exists("Cars.json"))
-    list = JsonSerializer.Deserialize<List<Car>>(File.ReadAllText("Cars.json"));
+if (File.Exists(@"..\..\..\Cars.json"))
+{
+    cars = JsonSerializer.Deserialize<List<Car>>(File.ReadAllText("Cars.json"))!;
+    Console.WriteLine("Cars yest");
+}
+
+cars ??= new();
 
 var listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 45678);
 
@@ -37,7 +42,26 @@ while (true)
             {
                 case HttpMethods.GET:
                     {
+                        var id = command.Car?.Id;
+                        if (id == 0)
+                        {
+                            var jsonCars = JsonSerializer.Serialize(cars);
+                            bw.Write(jsonCars);
+                            break;
+                        }
 
+                        Car? car = null;
+                        foreach (var c in cars)
+                        {
+                            if (c.Id == id)
+                            {
+                                car = c;
+                                break;
+                            }
+                        }
+
+                        var jsonResponse = JsonSerializer.Serialize(car);
+                        bw.Write(jsonResponse);
                         break;
                     }
                 case HttpMethods.POST:
@@ -45,7 +69,21 @@ while (true)
                 case HttpMethods.PUT:
                     break;
                 case HttpMethods.DELETE:
-                    break;
+                    {
+                        var isDeleted = false;
+                        var id = command.Car?.Id;
+                        foreach (var c in cars)
+                        {
+                            if (c.Id == id)
+                            {
+                                cars.Remove(c);
+                                isDeleted = true;
+                                break;
+                            }
+                        }
+                        bw.Write(isDeleted);
+                        break;
+                    }
                 default:
                     break;
             }

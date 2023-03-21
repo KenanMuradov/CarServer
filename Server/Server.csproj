@@ -8,6 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Cars.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Cars.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ModelsDLL\ModelsDLL.csproj" />
   </ItemGroup>
 
