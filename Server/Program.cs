@@ -6,7 +6,7 @@ using System.Text.Json;
 List<Car> cars = null!;
 
 if (File.Exists(@"..\..\..\Cars.json"))
-    cars = JsonSerializer.Deserialize<List<Car>>(File.ReadAllText("Cars.json"))!;
+    cars = JsonSerializer.Deserialize<List<Car>>(File.ReadAllText(@"..\..\..\Cars.json"))!;
 
 cars ??= new();
 
@@ -140,6 +140,12 @@ while (true)
                         bw.Write(isDeleted);
                         break;
                     }
+            }
+
+            lock(sync)
+            {
+                var jsonCars = JsonSerializer.Serialize(cars);
+                File.WriteAllTextAsync(@"..\..\..\Cars.json",jsonCars);
             }
         }
     }).Start();
